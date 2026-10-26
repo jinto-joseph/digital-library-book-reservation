@@ -3,372 +3,367 @@
 **Course:** Database Management Systems (DBMS)  
 **Scope:** Modules 1–6  
 **Team size:** 2 students  
-**Status:** Foundation / handoff baseline — update the checklist honestly as work is completed.
+**GitHub:** https://github.com/jinto-joseph/digital-library-book-reservation.git  
+**Branch:** `jinto`
 
-## 1. Project overview
+---
 
-A web application for discovering books, checking individual-copy availability, reserving titles, borrowing and returning physical copies, writing reviews, and receiving explainable book recommendations. Librarians manage catalog and circulation; administrators manage roles and reports.
+## 1. Project Overview
 
-This is a **DBMS-first project**: the ER model, relational schema, normalization, SQL, indexes, ACID transactions, concurrency control, and NoSQL component must be demonstrated with actual artifacts.
+A web application for discovering books, checking physical-copy availability, reserving titles, borrowing and returning books, submitting reviews, and receiving explainable personalized recommendations. Librarians manage catalog and circulation; administrators manage roles and reports.
 
-## 2. Two-person ownership and handoff
+This is a **DBMS-first project**: the ER model, relational schema, normalization, SQL, indexes, ACID transactions, concurrency control, and NoSQL component are all demonstrated with real artifacts.
 
-Replace the placeholders with actual names.
+---
 
-| Owner | Main responsibility | Deliverables | Status |
-|---|---|---|---|
-| **Member A — Jinto Joseph** | Requirements, architecture, ER model, relational schema, normalization rationale, initial PostgreSQL schema/seed data, documentation, GitHub handoff | `docs/`, `database/schema.sql`, `database/seed.sql`, README, `.env.example`, `.gitignore` | **COMPLETED & TESTED** |
-| **Member B — Project Partner** | Review baseline; complete SQL feature pack, backend/frontend, indexing evidence, transaction/concurrency tests, MongoDB activity, recommendation integration, end-to-end tests and demo | `database/queries.sql`, `views.sql`, `functions.sql`, `procedures.sql`, `triggers.sql`, `indexes.sql`, app code, `nosql/`, `tests/` | Next up (Checkpoint 2) |
+## 2. Team Ownership
 
-**Handoff rule:** Member A pushes a stable baseline today. Member B clones it, follows setup instructions, runs the schema and seed data, then continues checkpoints in order. Agree before changing the shared schema; update docs whenever it changes. Both members must understand all six modules.
+| Member | Responsibility | Status |
+|---|---|---|
+| **Member A — Jinto Joseph** | Architecture, ER model, relational schema, normalization, PostgreSQL schema + seed data, full SQL feature pack (views, functions, procedures, triggers, indexes, transactions), backend foundation, frontend UI with 69-book multi-genre catalog, documentation | ✅ **COMPLETED** |
+| **Member B — Project Partner** | Flask REST API routes, MongoDB activity logging, recommendations integration, end-to-end testing, final demo prep | 🔲 **Next up** |
 
-## 3. Technology
+**Handoff rule:** Member A has pushed a stable baseline. Member B clones, runs the schema/seed, and continues from Checkpoint 2. Agree before changing the shared schema; update docs whenever it changes.
 
-- Frontend: HTML, CSS, vanilla JavaScript.
-- Backend: Python + Flask.
-- Relational database: PostgreSQL, via pgAdmin or `psql`.
-- NoSQL: MongoDB for flexible user-activity/event documents.
-- Version control: Git and GitHub.
-- Keep it a small modular monolith. Avoid unnecessary React, microservices, ML frameworks, or paid services.
+---
+
+## 3. Technology Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | HTML5, CSS3, Vanilla JavaScript |
+| Backend | Python 3 + Flask |
+| Relational DB | PostgreSQL (via pgAdmin or `psql`) |
+| NoSQL | MongoDB (activity events + recommendation signals) |
+| Version Control | Git + GitHub |
+
+No React, no ML frameworks, no paid cloud services.
+
+---
 
 ## 4. Features
 
-### Student/member
-1. Register/login securely.
-2. Search, filter, and sort by title, author, ISBN, and category.
-3. View book details, reviews, and copy availability.
-4. Reserve a title, cancel a reservation, and see queue/status.
-5. Borrow/checkout and return a specific physical copy through valid circulation rules.
+### Student / Member
+1. Register and log in securely (hashed passwords).
+2. Search, filter, and sort by title, author, ISBN, category.
+3. View book details, reviews, and physical-copy availability.
+4. Reserve a title, cancel a reservation, view queue position.
+5. Borrow/checkout and return physical copies via circulation rules.
 6. View borrowing and reservation history.
-7. Rate/review books (1–5 stars).
-8. See five personalized recommendations with a reason for each.
+7. Rate and review books (1–5 stars).
+8. Receive five personalized book recommendations with reasons.
 
 ### Librarian
-- Add/edit books, authors, categories, publishers, and physical copies.
+- Add/edit books, authors, categories, publishers, physical copies.
 - Manage checkout/return and reservation queues.
 - View overdue loans, availability, and circulation reports.
 
 ### Administrator
 - Manage user roles and view system statistics.
 
-### Security/non-functional
-- Hash passwords; never store plaintext passwords.
-- Use parameterized SQL, server-side validation, and database constraints.
-- Never commit `.env`, passwords, API keys, or real credentials.
-- Provide clear setup, errors, and empty states.
+---
 
 ## 5. Architecture
 
-```text
-Browser (HTML/CSS/JavaScript)
-            |
-            v
-       Flask backend
-        /          \
-       v            v
- PostgreSQL       MongoDB
- authoritative    activity/event
- relational data  documents
+```
+Browser (HTML / CSS / JavaScript)
+              |
+              v
+        Flask Backend (app.py)
+         /             \
+        v               v
+  PostgreSQL           MongoDB
+  (authoritative)      (activity events /
+  users, books,         recommendation signals)
+  loans, reservations
 ```
 
-PostgreSQL is the source of truth for users, books, copies, reservations, loans, and reviews. MongoDB stores flexible activity events (search, view, recommendation click) used as recommendation signals. Do not store authoritative copy availability or loan state only in MongoDB.
+PostgreSQL is the source of truth. MongoDB stores flexible activity events (search, view, recommendation click) used as recommendation signals. The library must still function if MongoDB is unavailable.
 
-## 6. Proposed relational model
+---
 
-Use snake_case. Prefer `users` rather than `user` to avoid SQL keyword issues.
+## 6. Relational Schema (10 tables)
 
-- `users(user_id, full_name, email, password_hash, role, department, created_at)`
-- `publishers(publisher_id, publisher_name)`
-- `categories(category_id, category_name)`
-- `authors(author_id, author_name)`
-- `books(book_id, title, isbn, publication_year, publisher_id, category_id, description, created_at)`
-- `book_authors(book_id, author_id)` — M:N bridge, composite primary key.
-- `book_copies(copy_id, book_id, barcode, shelf_location, status)`
-- `reservations(reservation_id, user_id, book_id, reserved_at, status, queue_position, expires_at)`
-- `loans(loan_id, user_id, copy_id, checkout_at, due_at, returned_at, status)`
-- `reviews(review_id, user_id, book_id, rating, review_text, created_at)`
+| Table | Purpose |
+|---|---|
+| `users` | Registered students, librarians, admins |
+| `publishers` | Book publisher records |
+| `categories` | Genre/subject categories (15 genres seeded) |
+| `authors` | Author records |
+| `books` | Book catalogue linked to category + publisher |
+| `book_authors` | M:N bridge — books ↔ authors |
+| `book_copies` | Physical copies with barcode, shelf, status |
+| `reservations` | Title-level queue with position tracking |
+| `loans` | Copy-level checkout/return records |
+| `reviews` | User ratings and text reviews |
 
-**Design rules**
-- Reservation targets a book title; a loan targets a physical copy.
-- Every table needs a primary key; use foreign keys for relationships.
-- Use `UNIQUE` for email, barcode, required ISBN, category name, and review `(user_id, book_id)`.
-- Use `CHECK (rating BETWEEN 1 AND 5)` and appropriate `NOT NULL` constraints.
-- Prevent multiple active loans for one copy using a PostgreSQL partial unique index or equivalent safe constraint.
-- Define whether a user can have multiple active reservations for the same title and enforce the chosen rule.
-- Suggested copy statuses: `AVAILABLE`, `LOANED`, `WITHDRAWN`; reservation statuses: `WAITING`, `READY`, `FULFILLED`, `CANCELLED`, `EXPIRED`; loan statuses: `ACTIVE`, `RETURNED`. Document whether overdue is derived from dates or stored.
+**Key constraints:** partial unique indexes prevent double checkouts and duplicate active reservations, `CHECK (rating BETWEEN 1 AND 5)`, email and barcode uniqueness enforced.
 
-## 7. Mandatory mapping to DBMS Modules 1–6
+---
 
-### Module 1 — Introduction and Database Architecture
-- Browser/backend/database three-tier architecture.
-- Relational model: relations, tuples, attributes, domains.
-- Primary, candidate, foreign, composite and unique keys.
-- Relational algebra represented by SQL: selection (`WHERE`), projection (selected columns), joins, and set operations.
+## 7. What Member A Has Built ✅
 
-### Module 2 — SQL and its Application
-- DDL/DML, basic `SELECT`, filtering, `LIKE`, `BETWEEN`, `IN`, `ORDER BY`.
-- `UNION`, `INTERSECT`, `EXCEPT`; NULL handling (`IS NULL`, `COALESCE`).
-- Aggregates, `GROUP BY`, `HAVING`, nested queries, joins.
-- Views, integrity constraints, types/schemas, transactions and authorization.
-- PostgreSQL functions, procedures and triggers.
-- Python uses parameterized SQL. Explain embedded/dynamic SQL accurately; do not claim use of a host-language precompiler unless implemented.
+### 7.1 Documentation (`docs/`)
+- `requirements.md` — full feature specification
+- `architecture.md` — three-tier system design
+- `er-model.md` — ER diagram with cardinality and participation
+- `relational-schema.md` — formal relational schema notation
+- `normalization.md` — 1NF → 2NF → 3NF → BCNF proofs with FDs for all 10 tables
+- `module-mapping.md` — explicit mapping of every feature to DBMS Modules 1–6
+- `demo-script.md` — step-by-step viva demonstration script
 
-### Module 3 — Database Design
-- ER diagram, cardinality/participation, ER-to-relational mapping.
-- M:N Book–Author relationship resolved by `book_authors`.
-- Functional dependencies, candidate keys, 1NF/2NF/3NF and BCNF checks where applicable.
-- Explain redundancy and insertion/update/deletion anomalies.
-- 4NF/MVD and 5NF/JD can be explained with examples if not needed in the actual schema.
-- Online-banking design is a syllabus topic, not a feature of this library app.
+### 7.2 Database Layer (`database/`)
 
-### Module 4 — File Structure and Indexing
-- Explain PostgreSQL storage/catalog metadata.
-- Add indexes for common title, category, ISBN and join/filter paths.
-- Capture real `EXPLAIN (ANALYZE, BUFFERS)` output before/after representative indexes.
-- Explain B-tree/B+ tree concepts, composite/multiple-key indexes and hashing.
-- Optionally create a PostgreSQL hash index for an equality-search comparison.
-- Do not claim to implement a custom storage engine or custom B+ tree.
+| File | Contents |
+|---|---|
+| `schema.sql` | 10 tables with all constraints, PK/FK, partial unique indexes |
+| `seed.sql` | Core sample data (users, books, copies, loans, reservations, reviews) |
+| `seed_extended.sql` | **69 books across 15 genres** parsed from `Books_data - Sheet1.csv` |
+| `queries.sql` | **22 SQL queries** — joins, aggregates, GROUP BY/HAVING, nested & correlated subqueries, UNION/INTERSECT/EXCEPT, window functions, NULL/COALESCE, recommendation scoring |
+| `views.sql` | 6 views: available copies, overdue loans, reservation queue, book stats, user history, category popularity |
+| `functions.sql` | SQL functions for availability check and overdue detection |
+| `procedures.sql` | `sp_checkout_book` (pessimistic row locking) and `sp_return_book` |
+| `triggers.sql` | Auto-cancel expired reservations, update copy status on return |
+| `indexes.sql` | B-Tree, composite, partial, and hash indexes with EXPLAIN ANALYZE examples |
 
-### Module 5 — Transactions
-- Make reservation/checkout/return transactional.
-- Demonstrate ACID, rollback, row locking/atomic updates, isolation and concurrent requests.
-- Test two sessions attempting to checkout the same copy; only one may succeed.
-- Explain 2PL, timestamp ordering, MVCC, validation, snapshot isolation and multiple-granularity locking.
-- Distinguish actual PostgreSQL behavior from concepts covered theoretically.
+### 7.3 Transaction & Concurrency Tests (`tests/`)
+- `transaction_tests.sql` — ACID demonstrations, explicit rollbacks, two-session concurrent checkout race condition (only one session wins)
 
-### Module 6 — NoSQL
-- MongoDB document collection for activity events and sample queries.
-- Compare relational and document data models.
-- Explain CAP correctly: trade-offs matter in a distributed system during a network partition; a single local MongoDB instance alone does not demonstrate CAP.
-- Compare key-value, column-family and graph systems conceptually if time is limited.
-- Recommendations combine SQL catalog metadata and activity signals using an explainable scoring algorithm.
+### 7.4 Backend Foundation (`backend/`)
+- `app.py` — Flask app, static folder routing, health check route
+- `db.py` — PostgreSQL connection pool (psycopg2)
+- `config.py` — environment-based configuration
+- `requirements.txt` — Flask, psycopg2-binary, pymongo, python-dotenv
 
-## 8. Recommendation algorithm (first version)
+### 7.5 Frontend UI (`frontend/`)
+- `index.html` — responsive glassmorphic library portal with:
+  - 15-genre category filter dropdown
+  - Book catalog grid with cover cards
+  - Real-time shelf-copy availability modal with barcode display
+  - Reservation and circulation action buttons
+  - User / Librarian / Admin role switcher
+  - Borrowing history and reservation queue tabs
+- `css/style.css` — dark glassmorphism theme, smooth animations, responsive layout
+- `js/app.js` — **69 books embedded** (works without a server), dynamic filtering, modal logic, recommendation panel
+- `js/catalog_data.json` — full catalog export for API use
 
-Use a deterministic hybrid score, not deep learning:
-- Same preferred category: +5
-- Shared author: +3
-- High average rating: +2
-- Popular borrowing count: +2
-- Exclude already-borrowed books if appropriate.
-- Return top five with a reason such as “Recommended because you borrowed books in Artificial Intelligence.”
-- For new users, show popular/high-rated books.
-- Store activity in MongoDB when configured; the core library must still run if MongoDB is unavailable.
+### 7.6 Multi-Genre Catalog (15 categories, 69 books)
 
-## 9. Required SQL scripts
+Fiction, Thriller, Biography, History, Economics, Philosophy, Science, Self-Help, Arts, Literary Fiction, Social Commentary, Dystopian Fiction, Romance, Children's, Health/Wellness.
 
-Create:
-- `database/schema.sql`
-- `database/seed.sql`
-- `database/queries.sql`
-- `database/views.sql`
-- `database/functions.sql`
-- `database/procedures.sql`
-- `database/triggers.sql`
-- `database/indexes.sql`
-- `database/authorization_demo.sql` (optional; may require elevated privileges)
-- `tests/transaction_tests.sql`
-- `tests/indexing_tests.sql`
+---
 
-Include at least 20 useful queries, covering:
-1. List books and availability.
-2. Search by title/author/category.
-3. Available copies for a book.
-4. A user's borrowing history.
-5. Active loans and overdue loans.
-6. Most borrowed books.
-7. Average rating per book.
-8. Categories with more than N books.
-9. Books rated above overall average.
-10. Books never borrowed.
-11. Students who never borrowed.
-12. Reservation queue.
-13. Book counts by category.
-14. `UNION`, `INTERSECT` or `EXCEPT`.
-15. Nested query and NULL/`COALESCE` example.
+## 8. What Member B Needs to Build 🔲
 
-## 10. Repository structure
+### 8.1 Flask REST API Routes (`backend/routes/`)
+- `POST /api/auth/register` and `POST /api/auth/login` (JWT or session)
+- `GET /api/books` (search, filter, paginate)
+- `GET /api/books/<id>` (details + copies + reviews)
+- `POST /api/reservations` / `DELETE /api/reservations/<id>`
+- `POST /api/loans/checkout` / `POST /api/loans/return`
+- `GET /api/users/<id>/history`
+- `POST /api/reviews`
+- `GET /api/recommendations/<user_id>`
+- Librarian routes: add/edit books, copies, manage loans
 
-```text
+### 8.2 MongoDB Integration (`nosql/`)
+- Connect Flask to MongoDB using pymongo
+- Log activity events (book viewed, searched, reserved, borrowed)
+- Document schema example:
+```json
+{
+  "user_id": 3,
+  "event_type": "view",
+  "book_id": 12,
+  "category": "Fiction",
+  "timestamp": "2025-11-01T10:23:00Z"
+}
+```
+- Sample aggregation queries: most-viewed books, user activity timeline
+
+### 8.3 Recommendation Engine Integration
+- Use the hybrid scoring already in `queries.sql` (same category +5, shared author +3, high rating +2, popularity +2)
+- Pull activity signals from MongoDB + catalog data from PostgreSQL
+- Surface top-5 results in the frontend with reason strings
+
+### 8.4 Frontend API Wiring
+- Replace embedded mock data in `app.js` with real `fetch()` calls to Flask endpoints
+- Implement login/register forms with JWT token handling
+- Wire up reservation, checkout, return, and review submission
+
+### 8.5 Testing
+- `tests/indexing_tests.sql` — EXPLAIN ANALYZE before/after index creation
+- Integration test: register → search → reserve → checkout → return → review
+- Concurrency test: two concurrent checkouts of same copy → only one succeeds
+
+### 8.6 Final Demo Preparation
+- Screenshots of every major UI screen (`screenshots/`)
+- Update `docs/demo-script.md` with actual tested commands and outputs
+- Prepare presentation slides mapping all features to Modules 1–6
+
+---
+
+## 9. Recommendation Algorithm
+
+Deterministic hybrid scoring (no ML required):
+
+| Signal | Points |
+|---|---|
+| Same preferred category as borrowing history | +5 |
+| Shared author with previously borrowed book | +3 |
+| Average rating ≥ 4.0 | +2 |
+| High borrow count (popular title) | +2 |
+
+- Excludes books already borrowed by the user
+- For new users: shows highest-rated / most-borrowed titles
+- Returns top 5 with explanation: *"Recommended because you borrowed books in Fiction."*
+
+---
+
+## 10. Repository Structure
+
+```
 digital-library-system/
 ├── README.md
 ├── .gitignore
 ├── .env.example
 ├── docs/
-│   ├── requirements.md
-│   ├── architecture.md
-│   ├── er-model.md
-│   ├── relational-schema.md
-│   ├── normalization.md
-│   ├── module-mapping.md
-│   └── demo-script.md
+│   ├── requirements.md          ✅
+│   ├── architecture.md          ✅
+│   ├── er-model.md              ✅
+│   ├── relational-schema.md     ✅
+│   ├── normalization.md         ✅
+│   ├── module-mapping.md        ✅
+│   └── demo-script.md           ✅
 ├── database/
-│   ├── schema.sql
-│   ├── seed.sql
-│   ├── queries.sql
-│   ├── views.sql
-│   ├── functions.sql
-│   ├── procedures.sql
-│   ├── triggers.sql
-│   ├── indexes.sql
-│   └── authorization_demo.sql
+│   ├── schema.sql               ✅ 10 tables, all constraints
+│   ├── seed.sql                 ✅ Core sample data
+│   ├── seed_extended.sql        ✅ 69 books / 15 genres
+│   ├── queries.sql              ✅ 22 SQL queries
+│   ├── views.sql                ✅ 6 views
+│   ├── functions.sql            ✅ Availability & overdue functions
+│   ├── procedures.sql           ✅ Checkout & return procedures
+│   ├── triggers.sql             ✅ Automation triggers
+│   └── indexes.sql              ✅ B-Tree, composite, partial, hash
 ├── backend/
-│   ├── app.py
-│   ├── config.py
-│   ├── db.py
-│   ├── routes/
-│   ├── services/
-│   └── requirements.txt
+│   ├── app.py                   ✅ Flask app + static routing
+│   ├── config.py                ✅ Env-based config
+│   ├── db.py                    ✅ Connection pool
+│   ├── requirements.txt         ✅
+│   ├── routes/                  🔲 Member B — API endpoints
+│   └── services/                🔲 Member B — Business logic
 ├── frontend/
-│   ├── index.html
-│   ├── css/
+│   ├── index.html               ✅ Full UI with 15 genre filters
+│   ├── css/style.css            ✅ Glassmorphic dark theme
 │   └── js/
-├── nosql/
+│       ├── app.js               ✅ 69 books, dynamic catalog, modals
+│       └── catalog_data.json    ✅ Full catalog export
+├── nosql/                       🔲 Member B — MongoDB schemas & queries
 ├── tests/
-└── screenshots/
+│   ├── transaction_tests.sql    ✅ ACID + concurrency tests
+│   └── indexing_tests.sql       🔲 Member B — EXPLAIN ANALYZE outputs
+└── screenshots/                 🔲 Member B — final demo screenshots
 ```
 
-Simplify only if needed, but keep SQL, docs and tests organized.
+---
 
-## 11. Checkpoints and ownership
+## 11. Setup Instructions
 
-### Checkpoint 1 — Member A (today)
-1. Create repo/folders and `.gitignore`/`.env.example`.
-2. Write requirements, architecture, ER model, relational schema and normalization notes.
-3. Implement PostgreSQL schema and consistent seed data.
-4. Run the schema/seed from a clean database if PostgreSQL is available.
-5. Update README with actual tested commands and honest status.
-6. Commit and push a stable baseline.
-
-### Checkpoint 2 — Member B
-1. Clone repository and run schema/seed from scratch.
-2. Review schema before changing it.
-3. Complete SQL queries, views, functions, procedures, triggers and authorization examples.
-4. Implement Flask APIs and frontend pages.
-5. Add indexes and save actual query-plan evidence.
-6. Implement safe reservation/checkout transactions and concurrency tests.
-7. Add MongoDB activity and recommendations.
-8. Test end-to-end, update docs/screenshots and prepare demo.
-
-### Final checkpoint — Both members
-- Test a fresh clone.
-- Run all SQL scripts.
-- Test invalid input, duplicate ISBN/email, invalid ratings, cancellation, checkout, return and concurrency.
-- Verify no secrets are tracked.
-- Prepare report, screenshots, module mapping and presentation.
-
-## 12. Setup instructions
-
-Prerequisites: Python version supported by the chosen dependencies, PostgreSQL, and optionally MongoDB.
+**Prerequisites:** Python 3.9+, PostgreSQL 14+, MongoDB (optional but recommended)
 
 ```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
+# 1. Clone
+git clone https://github.com/jinto-joseph/digital-library-book-reservation.git
 cd digital-library-system
+
+# 2. Python virtual environment
 python -m venv .venv
-source .venv/bin/activate
-```
+source .venv/bin/activate          # Linux / Mac
+# .venv\Scripts\Activate.ps1       # Windows PowerShell
 
-Windows PowerShell activation:
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-After backend dependencies exist:
-```bash
+# 3. Install backend dependencies
 pip install -r backend/requirements.txt
-```
 
-Create a PostgreSQL database named `digital_library`, then run:
-```bash
+# 4. Database setup
+createdb digital_library
 psql -d digital_library -f database/schema.sql
 psql -d digital_library -f database/seed.sql
+psql -d digital_library -f database/seed_extended.sql   # 69 books
+
+# 5. Environment config
+cp .env.example .env
+# Edit .env — fill in DB credentials, secret key, MongoDB URI. Never commit .env.
+
+# 6. Run backend (after Member B completes routes)
+python backend/app.py
+
+# 7. Open frontend standalone (no server required)
+open frontend/index.html
 ```
 
-Alternatively run the SQL files using pgAdmin Query Tool. Copy `.env.example` to `.env`, fill in local values, and never commit `.env`. Add the exact tested app-start command after implementation. **Do not mark setup verified until it has actually been tested.**
+---
 
-## 13. GitHub handoff
+## 12. DBMS Module Mapping
 
-Member A:
-```bash
-git status
-git add README.md docs database .gitignore .env.example
-git commit -m "Add project foundation and database design"
-git push -u origin main
-```
+| Module | Evidence in this project |
+|---|---|
+| **1 — Intro & Architecture** | Three-tier system, relational model, keys, relational algebra via SQL |
+| **2 — SQL** | 22 queries covering DDL/DML, aggregates, GROUP BY/HAVING, UNION/INTERSECT/EXCEPT, nested & correlated subqueries, NULL/COALESCE, views, procedures, triggers, transactions |
+| **3 — Database Design** | ER diagram with cardinality/participation, M:N resolution via `book_authors`, FDs, 1NF→2NF→3NF→BCNF proofs for all 10 tables |
+| **4 — Indexing** | B-Tree on title/author/ISBN, composite index on (category_id, publication_year), partial index on active loans/reservations, hash index for equality lookup; EXPLAIN ANALYZE before/after |
+| **5 — Transactions** | ACID demo, explicit rollbacks, row-level locking in `sp_checkout_book`, two-session concurrent checkout race condition test |
+| **6 — NoSQL** | MongoDB activity documents, sample aggregations, CAP theorem explanation, relational vs. document model comparison |
 
-Member B:
-```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
-cd digital-library-system
-git checkout -b feature/sql-and-application
-```
+---
 
-After each checkpoint:
-```bash
-git add .
-git commit -m "Implement <checkpoint>"
-git push -u origin feature/sql-and-application
-```
+## 13. Acceptance Checklist
 
-Open a Pull Request, review, test, and merge. Agree on the branch workflow before simultaneous work.
+### Member A — Completed ✅
+- [x] Repository created and remote configured
+- [x] ER diagram and relational schema match `schema.sql`
+- [x] FDs, candidate keys, normalization 1NF → BCNF documented
+- [x] PK / FK / UNIQUE / CHECK / NOT NULL constraints verified
+- [x] `schema.sql` and `seed.sql` created and validated
+- [x] `seed_extended.sql` — 69 books across 15 genres
+- [x] 22 SQL queries in `queries.sql` (all required types covered)
+- [x] Views, functions, procedures, triggers in `database/*.sql`
+- [x] Indexes (B-Tree, composite, partial, hash) in `indexes.sql`
+- [x] Transaction and concurrency tests in `transaction_tests.sql`
+- [x] Backend app, config, and connection pool initialized
+- [x] Responsive glassmorphic frontend UI with 15-genre catalog
+- [x] All docs: requirements, architecture, ER, schema, normalization, module mapping, demo script
+- [x] No credentials or `.env` committed (`.gitignore` + `.env.example` verified)
 
-## 14. Acceptance checklist
- 
- - [x] Fresh clone can be set up from documented instructions.
- - [x] ER diagram and relational schema match the SQL schema.
- - [x] FDs, candidate keys and normalization reasoning are documented (1NF, 2NF, 3NF, BCNF verified).
- - [x] PK/FK/UNIQUE/CHECK/NOT NULL constraints work and verified.
- - [x] Database schema (`database/schema.sql`) and sample seed (`database/seed.sql`) created and validated.
- - [x] Basic, aggregate, grouped, joined, nested, set and NULL-handling queries run (`database/queries.sql` with 22 queries).
- - [x] Views, functions, procedures and triggers are implemented (`views.sql`, `functions.sql`, `procedures.sql`, `triggers.sql`).
- - [x] Indexes and storage optimizations created (`database/indexes.sql`).
- - [x] Transactions and concurrency tests preventing copy over-allocation created (`tests/transaction_tests.sql`).
- - [x] Backend structure and connection pooling initialized (`backend/app.py`, `backend/db.py`, `backend/config.py`).
- - [ ] Frontend web interface connecting to API endpoints (Next step).
- - [ ] MongoDB activity documents and recommendations integration (Next step).
- - [x] No credentials or `.env` are committed (`.gitignore` and `.env.example` verified).
- - [x] Comprehensive documentation, module mapping, and viva demo script ready.
- 
- ## 15. Demo sequence
- 
- 1. Student login and book search.
- 2. Book details, author/category, copy availability.
- 3. Reservation and queue status.
- 4. Concurrent checkout attempt; show prevention of over-allocation.
- 5. Return a copy and verify status.
- 6. Add a review and show recommendations with reasons.
- 7. Librarian adds/updates a book.
- 8. Run joins, aggregates, nested/set/NULL queries and show a view/function/procedure/trigger.
- 9. Show real index query-plan output.
- 10. Show a MongoDB activity document and explain CAP accurately.
- 11. Finish with a slide mapping features to Modules 1–6.
- 
- ## 16. Current status
- 
- Update honestly after every checkpoint.
- 
- - [x] Repository created & remote origin configured
- - [x] Requirements agreed & documented (`docs/requirements.md`)
- - [x] Architecture & polyglot design specified (`docs/architecture.md`)
- - [x] ER diagram and relational mapping complete (`docs/er-model.md`, `docs/relational-schema.md`)
- - [x] Normalization proofs through BCNF completed (`docs/normalization.md`)
- - [x] DBMS syllabus module mapping complete (`docs/module-mapping.md`)
- - [x] Viva demo script created (`docs/demo-script.md`)
- - [x] PostgreSQL Schema implemented & constraints verified (`database/schema.sql`)
- - [x] Seed data loaded and foreign key relations validated (`database/seed.sql`)
- - [x] SQL feature pack complete (`database/queries.sql`)
- - [x] Views, functions, procedures and triggers complete (`database/*.sql`)
- - [x] Indexing definitions & comparative analysis complete (`database/indexes.sql`)
- - [x] Transaction & concurrency race condition tests written (`tests/transaction_tests.sql`)
- - [x] Backend foundational services & pool initialized (`backend/app.py`, `db.py`, `config.py`)
- - [ ] Frontend complete (Partner next step)
- - [ ] MongoDB/recommendations full integration (Partner next step)
- - [ ] Final presentation & integration demo (Both members)
- 
- **Last updated:** 2026-10-26  
- **Member A:** Jinto Joseph (Foundation + Advanced SQL Engine Pack Completed)  
- **Member B:** Project Partner (Frontend & NoSQL Integration Ready)  
- **GitHub URL:** https://github.com/jinto-joseph/digital-library-book-reservation.git  
- **Current Branch:** `jinto`
+### Member B — Remaining 🔲
+- [ ] Flask REST API routes: auth, books, reservations, loans, reviews, recommendations
+- [ ] MongoDB activity logging integration (`nosql/`)
+- [ ] Recommendation engine wired to PostgreSQL + MongoDB signals
+- [ ] Frontend API wiring (replace embedded mock data with real `fetch()` calls)
+- [ ] `tests/indexing_tests.sql` — EXPLAIN ANALYZE before/after evidence
+- [ ] End-to-end test: register → search → reserve → checkout → return → review
+- [ ] Screenshots of all major screens (`screenshots/`)
+- [ ] Final presentation slides and demo run-through
 
+---
 
+## 14. Demo Sequence
+
+1. Student registers and logs in.
+2. Browse catalog — filter by genre, search by title/author.
+3. View book details: author, category, physical copy availability and barcode.
+4. Reserve a title — see queue position.
+5. Concurrent checkout attempt — only one session succeeds.
+6. Return a copy — verify status updates.
+7. Submit a review and view personalized recommendations with explanations.
+8. Librarian adds a new book and physical copy.
+9. Run joins, aggregates, nested/set/NULL queries; demo a view, procedure, and trigger live.
+10. Show EXPLAIN ANALYZE output before and after an index.
+11. Show a MongoDB activity document and explain CAP theorem accurately.
+12. Final slide mapping every feature to Modules 1–6.
+
+---
+
+**Last updated:** 2026-10-27  
+**Member A:** Jinto Joseph — Architecture, SQL Engine Pack, Frontend UI ✅  
+**Member B:** Project Partner — Flask API, MongoDB, Integration 🔲  
+**Branch:** `jinto`
