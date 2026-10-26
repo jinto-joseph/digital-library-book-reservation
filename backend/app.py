@@ -1,10 +1,15 @@
 import os
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from config import Config
 from db import execute_query
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="../frontend", static_url_path="")
 app.config.from_object(Config)
+
+@app.route("/")
+def index():
+    """Serves the frontend application UI."""
+    return send_from_directory("../frontend", "index.html")
 
 @app.route("/api/health", methods=["GET"])
 def health_check():

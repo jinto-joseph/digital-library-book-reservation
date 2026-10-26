@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital Library System | Book Reservation & Recommendations</title>
+  <meta name="description" content="Academic DBMS three-tier digital library application backed by PostgreSQL and MongoDB. Modules 1-6 demonstration.">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+</head>
+<body>
+
+  <!-- Top Glassmorphic Navigation -->
+  <header class="app-header">
+    <div class="header-container">
+      <a href="#" class="brand-wrapper">
+        <div class="brand-icon">📚</div>
+        <div>
+          <div class="brand-title">DIGITAL LIBRARY SYSTEM</div>
+          <span class="brand-badge">DBMS Modules 1–6</span>
+        </div>
+      </a>
+
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs">
+        <button class="nav-tab-btn active" data-target="tab-catalog">
+          <span>📖</span> Catalog
+        </button>
+        <button class="nav-tab-btn" data-target="tab-recommendations">
+          <span>✨</span> Recommendations
+        </button>
+        <button class="nav-tab-btn" data-target="tab-circulation">
+          <span>🔄</span> Circulation & Loans
+        </button>
+        <button class="nav-tab-btn" data-target="tab-queues">
+          <span>⏳</span> Reservations Queue
+        </button>
+      </nav>
+
+      <!-- Active User Profile Simulator -->
+      <div class="user-selector-wrapper">
+        <span style="font-size: 0.85rem; color: var(--text-sub);">Role:</span>
+        <select id="active-user-select" title="Switch User Profile">
+          <option value="4" selected>Jinto Joseph (Student)</option>
+          <option value="5">Ananya Sharma (Student)</option>
+          <option value="2">Eleanor Vance (Librarian)</option>
+          <option value="1">System Administrator</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Application Body -->
+  <main class="main-content">
+
+    <!-- 1. CATALOG TAB VIEW -->
+    <section id="tab-catalog" class="tab-view active">
+      <div class="glass-panel hero-card">
+        <h1 class="hero-title">Academic Book Discovery & Circulation</h1>
+        <p class="hero-subtitle">
+          Search textbooks, filter by domain categories, verify real-time shelf copy availability, and manage transactional checkouts backed by PostgreSQL ACID integrity.
+        </p>
+
+        <!-- Search & Category Filters -->
+        <div class="search-controls">
+          <div class="search-input-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="search-input" class="search-input" placeholder="Search by title, author name, or ISBN..." autocomplete="off">
+          </div>
+          
+          <select id="category-filter" class="filter-select" title="Filter by Subject Domain">
+            <option value="">All Categories</option>
+            <option value="1">Database Systems</option>
+            <option value="2">Computer Networks</option>
+            <option value="3">Operating Systems</option>
+            <option value="4">Algorithms & Data Structures</option>
+            <option value="5">Artificial Intelligence & ML</option>
+            <option value="6">Software Engineering</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Live Catalog Grid -->
+      <div id="books-grid" class="book-grid">
+        <!-- Rendered by app.js -->
+      </div>
+    </section>
+
+    <!-- 2. RECOMMENDATIONS TAB VIEW -->
+    <section id="tab-recommendations" class="tab-view">
+      <div class="glass-panel hero-card">
+        <h1 class="hero-title">Personalized Book Recommendations</h1>
+        <p class="hero-subtitle">
+          Explainable hybrid scoring engine (+5 category affinity, +3 shared author, +2 high rating, +2 circulation popularity) powered by relational catalog analytics and MongoDB activity telemetry.
+        </p>
+      </div>
+
+      <div id="recommendations-grid" class="book-grid">
+        <!-- Rendered by app.js -->
+      </div>
+    </section>
+
+    <!-- 3. CIRCULATION & LOANS TAB VIEW -->
+    <section id="tab-circulation" class="tab-view">
+      <!-- High Level System Stats -->
+      <div class="stats-grid">
+        <div class="glass-panel stat-box">
+          <div class="stat-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--accent-primary);">📚</div>
+          <div>
+            <div id="stat-total-titles" class="stat-number">8</div>
+            <div class="stat-label">Catalog Titles</div>
+          </div>
+        </div>
+        <div class="glass-panel stat-box">
+          <div class="stat-icon" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-secondary);">🏷️</div>
+          <div>
+            <div id="stat-total-copies" class="stat-number">21</div>
+            <div class="stat-label">Barcoded Physical Copies</div>
+          </div>
+        </div>
+        <div class="glass-panel stat-box">
+          <div class="stat-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-success);">🔄</div>
+          <div>
+            <div id="stat-active-loans" class="stat-number">3</div>
+            <div class="stat-label">Active Checkouts</div>
+          </div>
+        </div>
+        <div class="glass-panel stat-box">
+          <div class="stat-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-warning);">⏳</div>
+          <div>
+            <div id="stat-reservations" class="stat-number">3</div>
+            <div class="stat-label">Queued Reservations</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Loans Table -->
+      <div class="glass-panel" style="padding: 1.5rem;">
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1.2rem;">
+          Current Active Circulation & Overdue Loans
+        </h2>
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Loan ID</th>
+                <th>Borrower</th>
+                <th>Book Title</th>
+                <th>Barcode</th>
+                <th>Due Timestamp</th>
+                <th>Status / Fine</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="loans-table-body">
+              <!-- Rendered by app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. RESERVATIONS QUEUE TAB VIEW -->
+    <section id="tab-queues" class="tab-view">
+      <div class="glass-panel" style="padding: 1.5rem;">
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1.2rem;">
+          Real-Time FIFO Book Reservation Queues
+        </h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+          Enforces <code>uq_user_book_active_reservation</code> at the PostgreSQL engine level. When copies are checked back in via <code>sp_return_book()</code>, the queue automatically advances to <code>READY</code>.
+        </p>
+
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Reservation ID</th>
+                <th>Target Book Title</th>
+                <th>Patron Name</th>
+                <th>Requested At</th>
+                <th>Queue State</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="reservations-table-body">
+              <!-- Rendered by app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal: Book Copy Inspection -->
+  <div id="book-modal" class="modal-overlay" onclick="if(event.target === this) closeModal()">
+    <div class="modal-content">
+      <button class="modal-close-btn" onclick="closeModal()">×</button>
+      <h2 id="modal-title" style="font-size: 1.4rem; font-weight: 800; margin-bottom: 0.4rem;">Book Title</h2>
+      <p id="modal-authors" style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1rem;">Authors</p>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.2rem; font-size: 0.85rem; background: var(--bg-glass); padding: 0.85rem; border-radius: var(--radius-sm);">
+        <div><strong>ISBN:</strong> <span id="modal-isbn" style="font-family: 'JetBrains Mono', monospace;">-</span></div>
+        <div><strong>Publisher:</strong> <span id="modal-publisher">-</span></div>
+        <div><strong>Category:</strong> <span id="modal-category">-</span></div>
+      </div>
+
+      <p id="modal-desc" style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem;"></p>
+
+      <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-glass); padding-bottom: 0.5rem;">
+        Physical Inventory Items on Shelves
+      </h3>
+      <div id="modal-copies-list">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
