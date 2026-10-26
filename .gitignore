@@ -54,3 +54,7 @@ htmlcov/
 # Internal agent prompts and templates
 ANTIGRAVITY_BUILD_PROMPT.md
 *BUILD_PROMPT*.md
+
+# Large raw datasets (avoid pushing 100MB+ CSVs to GitHub)
+*.csv
+datasets/
