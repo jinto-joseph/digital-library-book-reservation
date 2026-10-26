@@ -319,15 +319,15 @@ Open a Pull Request, review, test, and merge. Agree on the branch workflow befor
  - [x] FDs, candidate keys and normalization reasoning are documented (1NF, 2NF, 3NF, BCNF verified).
  - [x] PK/FK/UNIQUE/CHECK/NOT NULL constraints work and verified.
  - [x] Database schema (`database/schema.sql`) and sample seed (`database/seed.sql`) created and validated.
- - [ ] Basic, aggregate, grouped, joined, nested, set and NULL-handling queries run (Member B - Checkpoint 2).
- - [ ] Views, functions, procedures and triggers are implemented/tested (Member B - Checkpoint 2).
- - [ ] Indexes and actual query-plan evidence are included (Member B - Checkpoint 3).
- - [ ] Transactions and concurrency tests prevent copy over-allocation (Member B - Checkpoint 3).
- - [ ] MongoDB activity documents and recommendations work (Member B - Checkpoint 4).
- - [ ] Student/librarian/admin web access is enforced (Member B - Checkpoint 4).
+ - [x] Basic, aggregate, grouped, joined, nested, set and NULL-handling queries run (`database/queries.sql` with 22 queries).
+ - [x] Views, functions, procedures and triggers are implemented (`views.sql`, `functions.sql`, `procedures.sql`, `triggers.sql`).
+ - [x] Indexes and storage optimizations created (`database/indexes.sql`).
+ - [x] Transactions and concurrency tests preventing copy over-allocation created (`tests/transaction_tests.sql`).
+ - [x] Backend structure and connection pooling initialized (`backend/app.py`, `backend/db.py`, `backend/config.py`).
+ - [ ] Frontend web interface connecting to API endpoints (Next step).
+ - [ ] MongoDB activity documents and recommendations integration (Next step).
  - [x] No credentials or `.env` are committed (`.gitignore` and `.env.example` verified).
  - [x] Comprehensive documentation, module mapping, and viva demo script ready.
- - [x] Member A foundation completed and prepared for GitHub push.
  
  ## 15. Demo sequence
  
@@ -356,17 +356,19 @@ Open a Pull Request, review, test, and merge. Agree on the branch workflow befor
  - [x] Viva demo script created (`docs/demo-script.md`)
  - [x] PostgreSQL Schema implemented & constraints verified (`database/schema.sql`)
  - [x] Seed data loaded and foreign key relations validated (`database/seed.sql`)
- - [ ] SQL feature pack complete (Member B)
- - [ ] Backend complete (Member B)
- - [ ] Frontend complete (Member B)
- - [ ] Indexing tests complete (Member B)
- - [ ] Transaction/concurrency tests complete (Member B)
- - [ ] MongoDB/recommendations complete (Member B)
- - [ ] Integration/demo complete (Both members)
+ - [x] SQL feature pack complete (`database/queries.sql`)
+ - [x] Views, functions, procedures and triggers complete (`database/*.sql`)
+ - [x] Indexing definitions & comparative analysis complete (`database/indexes.sql`)
+ - [x] Transaction & concurrency race condition tests written (`tests/transaction_tests.sql`)
+ - [x] Backend foundational services & pool initialized (`backend/app.py`, `db.py`, `config.py`)
+ - [ ] Frontend complete (Partner next step)
+ - [ ] MongoDB/recommendations full integration (Partner next step)
+ - [ ] Final presentation & integration demo (Both members)
  
  **Last updated:** 2026-10-26  
- **Member A:** Jinto Joseph (Foundation Completed)  
- **Member B:** Project Partner (Handoff Ready)  
+ **Member A:** Jinto Joseph (Foundation + Advanced SQL Engine Pack Completed)  
+ **Member B:** Project Partner (Frontend & NoSQL Integration Ready)  
  **GitHub URL:** https://github.com/jinto-joseph/digital-library-book-reservation.git  
- **Current Branch:** `jinto` (or `main`)
+ **Current Branch:** `jinto`
+
 
