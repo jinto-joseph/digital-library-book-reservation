@@ -283,17 +283,26 @@ function setupSearch() {
 }
 
 async function loadData() {
-  // Try fetching live data from Flask backend; fallback to seed state
+  // Load full multi-genre catalog (69 books across Fiction, Biography, History, Economics, etc.)
   try {
     const res = await fetch("/api/books");
     if (res.ok) {
       const data = await res.json();
-      state.books = data.books && data.books.length ? data.books : SEED_CATALOG;
-    } else {
+      state.books = data.books && data.books.length ? data.books : [];
+    }
+  } catch (err) {}
+
+  if (!state.books || state.books.length === 0) {
+    try {
+      const jsonRes = await fetch("js/catalog_data.json");
+      if (jsonRes.ok) {
+        state.books = await jsonRes.json();
+      } else {
+        state.books = SEED_CATALOG;
+      }
+    } catch (e) {
       state.books = SEED_CATALOG;
     }
-  } catch (err) {
-    state.books = SEED_CATALOG;
   }
 
   state.activeLoans = SEED_LOANS;
