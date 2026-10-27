@@ -15,6 +15,10 @@ class Config:
     DB_USER = os.getenv("DB_USER", "postgres")
     DB_PASSWORD = os.getenv("DB_PASSWORD", "")
 
+    # Print every SQL statement to the server terminal (SQL_LOG=0 turns it off)
+    SQL_LOG = os.getenv("SQL_LOG", "1").lower() in ("true", "1", "yes")
+    SQL_LOG_MAX = int(os.getenv("SQL_LOG_MAX", "400"))   # characters shown per statement
+
     # MongoDB Document Store (Module 6 Activity Telemetry)
     MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
     MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "digital_library_events")

@@ -17,6 +17,35 @@ except ImportError:
 
 _pg_pool: Optional[Any] = None
 
+if PSYCOPG2_AVAILABLE:
+    import re
+    import time
+
+    class SqlLoggingCursor(RealDictCursor):
+        """RealDictCursor that prints each executed statement to the live terminal feed:
+        the SQL with its bound values, execution time and affected/returned rows."""
+
+        def execute(self, query, vars=None):
+            start = time.perf_counter()
+            try:
+                return super().execute(query, vars)
+            finally:
+                if Config.SQL_LOG:
+                    self._log(query, vars, (time.perf_counter() - start) * 1000)
+
+        def _log(self, query, vars, ms):
+            from security import activity_log
+            hide = "password_hash" in query and vars
+            text = query if hide else self.query.decode(errors="replace") if self.query else query
+            text = re.sub(r"\s+", " ", text).strip()
+            if len(text) > Config.SQL_LOG_MAX:
+                text = text[:Config.SQL_LOG_MAX] + " ..."
+            if hide:
+                text += "   [values hidden]"
+            rows = self.rowcount if self.rowcount >= 0 else 0
+            activity_log.info(f"\033[90m[SQL     ] {ms:6.1f} ms  {rows:>3} rows :: {text}\033[0m")
+
+
 def init_db_pool():
     """Initializes the PostgreSQL connection pool."""
     global _pg_pool
@@ -33,7 +62,7 @@ def init_db_pool():
                 database=Config.DB_NAME,
                 user=Config.DB_USER,
                 password=Config.DB_PASSWORD,
-                cursor_factory=RealDictCursor
+                cursor_factory=SqlLoggingCursor
             )
             logger.info("PostgreSQL connection pool initialized successfully.")
         except Exception as e:

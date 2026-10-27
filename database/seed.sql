@@ -30,20 +30,20 @@ ALTER SEQUENCE reviews_review_id_seq RESTART WITH 1;
 -- ----------------------------------------------------------------------------
 -- 1. USERS
 -- Standard bcrypt hash for development demo accounts:
--- Password: "Password123!" -> hash: $2b$12$e8Yvj6k1v3uL6CjE9i9OzeoZ0gD4G1G6G4k8m4Q6l9f7J2m0q9s5a (demonstrative salt)
+-- Password for every demo account: "Password123!" (real bcrypt hash, cost 12)
 -- Includes Admin, Librarian, Faculty, and Students across departments
 -- ----------------------------------------------------------------------------
 INSERT INTO users (full_name, email, password_hash, role, department, phone) VALUES
-('System Administrator', 'admin@library.edu', '$2b$12$K1nGwG9rPshZ9F4n2E9eAODRjGqGfWJ.qHkVX2rR5yqXlD2mZ5k1u', 'ADMIN', 'Information Technology', '+91-9876543210'),
-('Eleanor Vance', 'eleanor.librarian@library.edu', '$2b$12$K1nGwG9rPshZ9F4n2E9eAODRjGqGfWJ.qHkVX2rR5yqXlD2mZ5k1u', 'LIBRARIAN', 'Library Services', '+91-9876543211'),
-('Dr. Alan Turing', 'alan.turing@cs.edu', '$2b$12$K1nGwG9rPshZ9F4n2E9eAODRjGqGfWJ.qHkVX2rR5yqXlD2mZ5k1u', 'FACULTY', 'Computer Science & Engineering', '+91-9876543212'),
-('Jinto Joseph', 'jinto.student@cs.edu', '$2b$12$K1nGwG9rPshZ9F4n2E9eAODRjGqGfWJ.qHkVX2rR5yqXlD2mZ5k1u', 'STUDENT', 'Computer Science & Engineering', '+91-9876543213'),
-('Ananya Sharma', 'ananya.sharma@cs.edu', '$2b$12$K1nGwG9rPshZ9F4n2E9eAODRjGqGfWJ.qHkVX2rR5yqXlD2mZ5k1u', 'STUDENT', 'Computer Science & Engineering', '+91-9876543214'),
-('Rahul Verma', 'rahul.verma@ec.edu', '$2b$12$K1nGwG9rPshZ9F4n2E9eAODRjGqGfWJ.qHkVX2rR5yqXlD2mZ5k1u', 'STUDENT', 'Electronics & Communication', '+91-9876543215'),
-('Priya Nair', 'priya.nair@mech.edu', '$2b$12$K1nGwG9rPshZ9F4n2E9eAODRjGqGfWJ.qHkVX2rR5yqXlD2mZ5k1u', 'STUDENT', 'Mechanical Engineering', '+91-9876543216'),
-('Kavita Krishnan', 'kavita.k@ai.edu', '$2b$12$K1nGwG9rPshZ9F4n2E9eAODRjGqGfWJ.qHkVX2rR5yqXlD2mZ5k1u', 'STUDENT', 'Data Science & AI', '+91-9876543217'),
-('Dev Patel', 'dev.patel@cs.edu', '$2b$12$K1nGwG9rPshZ9F4n2E9eAODRjGqGfWJ.qHkVX2rR5yqXlD2mZ5k1u', 'STUDENT', 'Computer Science & Engineering', '+91-9876543218'),
-('Meera Sundaram', 'meera.s@ee.edu', '$2b$12$K1nGwG9rPshZ9F4n2E9eAODRjGqGfWJ.qHkVX2rR5yqXlD2mZ5k1u', 'STUDENT', 'Electrical Engineering', '+91-9876543219');
+('System Administrator', 'admin@library.edu', '$2b$12$njdlo4vipAUPgt0l/Z4CL.LTpDqix/HiwOxPqxwZyuaFPAnsAfWS6', 'ADMIN', 'Information Technology', '+91-9876543210'),
+('Eleanor Vance', 'eleanor.librarian@library.edu', '$2b$12$njdlo4vipAUPgt0l/Z4CL.LTpDqix/HiwOxPqxwZyuaFPAnsAfWS6', 'LIBRARIAN', 'Library Services', '+91-9876543211'),
+('Dr. Alan Turing', 'alan.turing@cs.edu', '$2b$12$njdlo4vipAUPgt0l/Z4CL.LTpDqix/HiwOxPqxwZyuaFPAnsAfWS6', 'FACULTY', 'Computer Science & Engineering', '+91-9876543212'),
+('Jinto Joseph', 'jinto.student@cs.edu', '$2b$12$njdlo4vipAUPgt0l/Z4CL.LTpDqix/HiwOxPqxwZyuaFPAnsAfWS6', 'STUDENT', 'Computer Science & Engineering', '+91-9876543213'),
+('Ananya Sharma', 'ananya.sharma@cs.edu', '$2b$12$njdlo4vipAUPgt0l/Z4CL.LTpDqix/HiwOxPqxwZyuaFPAnsAfWS6', 'STUDENT', 'Computer Science & Engineering', '+91-9876543214'),
+('Rahul Verma', 'rahul.verma@ec.edu', '$2b$12$njdlo4vipAUPgt0l/Z4CL.LTpDqix/HiwOxPqxwZyuaFPAnsAfWS6', 'STUDENT', 'Electronics & Communication', '+91-9876543215'),
+('Priya Nair', 'priya.nair@mech.edu', '$2b$12$njdlo4vipAUPgt0l/Z4CL.LTpDqix/HiwOxPqxwZyuaFPAnsAfWS6', 'STUDENT', 'Mechanical Engineering', '+91-9876543216'),
+('Kavita Krishnan', 'kavita.k@ai.edu', '$2b$12$njdlo4vipAUPgt0l/Z4CL.LTpDqix/HiwOxPqxwZyuaFPAnsAfWS6', 'STUDENT', 'Data Science & AI', '+91-9876543217'),
+('Dev Patel', 'dev.patel@cs.edu', '$2b$12$njdlo4vipAUPgt0l/Z4CL.LTpDqix/HiwOxPqxwZyuaFPAnsAfWS6', 'STUDENT', 'Computer Science & Engineering', '+91-9876543218'),
+('Meera Sundaram', 'meera.s@ee.edu', '$2b$12$njdlo4vipAUPgt0l/Z4CL.LTpDqix/HiwOxPqxwZyuaFPAnsAfWS6', 'STUDENT', 'Electrical Engineering', '+91-9876543219');
 
 -- ----------------------------------------------------------------------------
 -- 2. PUBLISHERS

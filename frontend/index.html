@@ -8,7 +8,33 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
 </head>
-<body>
+<body class="logged-out">
+
+  <!-- Login / Register Screen (shown until a session exists) -->
+  <section id="auth-screen" class="auth-screen">
+    <div class="glass-panel auth-card">
+      <div class="brand-icon" style="margin: 0 auto 1rem;">📚</div>
+      <h1 class="auth-title">Digital Library System</h1>
+      <p class="auth-subtitle" id="auth-subtitle">Sign in with your library account</p>
+
+      <form id="login-form" class="auth-form" autocomplete="on">
+        <input type="email" id="login-email" class="search-input auth-input" placeholder="E-mail address" required autocomplete="username">
+        <input type="password" id="login-password" class="search-input auth-input" placeholder="Password" required autocomplete="current-password">
+        <button type="submit" class="btn btn-primary auth-submit">Sign In</button>
+        <p class="auth-switch">New student? <a href="#" id="show-register">Create an account</a></p>
+      </form>
+
+      <form id="register-form" class="auth-form" style="display: none;" autocomplete="on">
+        <input type="text" id="reg-name" class="search-input auth-input" placeholder="Full name" required>
+        <input type="email" id="reg-email" class="search-input auth-input" placeholder="E-mail address" required autocomplete="username">
+        <input type="text" id="reg-dept" class="search-input auth-input" placeholder="Department (optional)">
+        <input type="password" id="reg-password" class="search-input auth-input" placeholder="Password (min. 8 characters)" minlength="8" required autocomplete="new-password">
+        <button type="submit" class="btn btn-primary auth-submit">Create Student Account</button>
+        <p class="auth-switch">Already registered? <a href="#" id="show-login">Sign in</a></p>
+      </form>
+      <p id="auth-error" class="auth-error"></p>
+    </div>
+  </section>
 
   <!-- Top Glassmorphic Navigation -->
   <header class="app-header">
@@ -23,29 +49,31 @@
 
       <!-- Navigation Tabs -->
       <nav class="nav-tabs">
+        <!-- data-roles limits who sees a tab; the API enforces the same rules server-side -->
         <button class="nav-tab-btn active" data-target="tab-catalog">
           <span>📖</span> Catalog
         </button>
-        <button class="nav-tab-btn" data-target="tab-recommendations">
+        <button class="nav-tab-btn" data-target="tab-recommendations" data-roles="STUDENT FACULTY">
           <span>✨</span> Recommendations
         </button>
         <button class="nav-tab-btn" data-target="tab-circulation">
-          <span>🔄</span> Circulation & Loans
+          <span>🔄</span> <span class="tab-label" data-student="My Loans" data-staff="Circulation & Loans">Circulation & Loans</span>
         </button>
         <button class="nav-tab-btn" data-target="tab-queues">
-          <span>⏳</span> Reservations Queue
+          <span>⏳</span> <span class="tab-label" data-student="My Reservations" data-staff="Reservations Queue">Reservations Queue</span>
+        </button>
+        <button class="nav-tab-btn" data-target="tab-users" data-roles="ADMIN">
+          <span>👥</span> Users
         </button>
       </nav>
 
-      <!-- Active User Profile Simulator -->
+      <!-- Signed-in user -->
       <div class="user-selector-wrapper">
-        <span style="font-size: 0.85rem; color: var(--text-sub);">Role:</span>
-        <select id="active-user-select" title="Switch User Profile">
-          <option value="4" selected>Jinto Joseph (Student)</option>
-          <option value="5">Ananya Sharma (Student)</option>
-          <option value="2">Eleanor Vance (Librarian)</option>
-          <option value="1">System Administrator</option>
-        </select>
+        <div class="user-chip">
+          <span id="user-name" class="user-name">—</span>
+          <span id="user-role" class="role-badge">—</span>
+        </div>
+        <button id="logout-btn" class="btn btn-outline btn-sm" title="Sign out">Logout</button>
       </div>
     </div>
   </header>
@@ -192,6 +220,36 @@
               </tr>
             </thead>
             <tbody id="reservations-table-body">
+              <!-- Rendered by app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. USERS TAB VIEW (ADMIN only) -->
+    <section id="tab-users" class="tab-view">
+      <div class="glass-panel" style="padding: 1.5rem;">
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1.2rem;">
+          User Accounts & Roles
+        </h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+          Role changes take effect at the user's next sign-in. Deactivated accounts cannot sign in or borrow.
+        </p>
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>E-mail</th>
+                <th>Department</th>
+                <th>Open Loans</th>
+                <th>Role</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body">
               <!-- Rendered by app.js -->
             </tbody>
           </table>
