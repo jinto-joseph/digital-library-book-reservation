@@ -1,15 +1,25 @@
 import os
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, send_from_directory
 from config import Config
-from db import execute_query
+from routes.auth import auth_bp
+from routes.library import library_bp
 
 app = Flask(__name__, static_folder="../frontend", static_url_path="")
 app.config.from_object(Config)
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SEND_FILE_MAX_AGE_DEFAULT=0,   # never cache frontend files: edits show on the next refresh
+)
+app.register_blueprint(auth_bp)
+app.register_blueprint(library_bp)
+
 
 @app.route("/")
 def index():
     """Serves the frontend application UI."""
     return send_from_directory("../frontend", "index.html")
+
 
 @app.route("/api/health", methods=["GET"])
 def health_check():
@@ -17,59 +27,20 @@ def health_check():
     return jsonify({
         "status": "healthy",
         "service": "Digital Library Book Reservation and Recommendation System",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "authoritative_db": "PostgreSQL"
     }), 200
 
-@app.route("/api/books", methods=["GET"])
-def list_books():
-    """
-    Retrieves catalog books using the database view v_book_catalog.
-    Demonstrates Module 2 Views & Parameterized dynamic filtering.
-    """
-    search = request.args.get("search", "").strip()
-    category_id = request.args.get("category_id")
 
-    query = """
-        SELECT book_id, title, isbn, publication_year, 
-               category_name, publisher_name, authors, 
-               average_rating, total_reviews, description
-        FROM v_book_catalog
-        WHERE 1=1
-    """
-    params = []
+@app.errorhandler(500)
+def server_error(e):
+    return jsonify({"error": "Internal server error. See the server terminal for details."}), 500
 
-    if search:
-        query += " AND (title ILIKE %s OR authors ILIKE %s OR category_name ILIKE %s)"
-        pattern = f"%{search}%"
-        params.extend([pattern, pattern, pattern])
-
-    if category_id:
-        query += " AND category_id = %s"
-        params.append(category_id)
-
-    query += " ORDER BY title ASC LIMIT 50"
-
-    try:
-        books = execute_query(query, tuple(params))
-        return jsonify({"count": len(books), "books": books}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route("/api/books/<int:book_id>/inventory", methods=["GET"])
-def book_inventory(book_id):
-    """Retrieves live physical copy availability for a specific book."""
-    query = """
-        SELECT copy_id, barcode, shelf_location, status, condition_notes
-        FROM book_copies
-        WHERE book_id = %s
-        ORDER BY shelf_location ASC
-    """
-    try:
-        copies = execute_query(query, (book_id,))
-        return jsonify({"book_id": book_id, "copies": copies}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
+    # The reloader re-runs this file in a child process; print the banner only once.
+    if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
+        print("\n  Digital Library server  ->  http://localhost:5000")
+        print("  Live activity feed below (logins, denials, checkouts, returns, reservations).")
+        print("  Python changes reload automatically; refresh the browser after frontend edits.\n")
     app.run(host="0.0.0.0", port=5000, debug=Config.DEBUG)

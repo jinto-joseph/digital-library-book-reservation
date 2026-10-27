@@ -303,6 +303,45 @@ open frontend/index.html
 
 ---
 
+### 11.1 Login, Roles and Access Control
+
+Every API route except `/api/auth/*` and `/api/health` needs a signed-in session (Flask signed cookie, bcrypt-checked password). The server enforces each rule; the UI only hides what a role cannot use.
+
+| Capability | STUDENT / FACULTY | LIBRARIAN | ADMIN |
+|---|---|---|---|
+| Browse catalogue, inspect copies | ✅ | ✅ | ✅ |
+| Borrow an available copy (self) | ✅ | — | — |
+| Reserve / cancel own reservation | ✅ | — | — |
+| See loans & reservations | own only | everyone | everyone |
+| Process returns, issue READY reservations | ❌ 403 | ✅ | ✅ |
+| Recommendations | ✅ | — | — |
+| Manage users (role, activate/deactivate) | ❌ 403 | ❌ 403 | ✅ |
+
+Self-registration always creates a STUDENT. Demo accounts are the users in `database/seed.sql`; they all share the password noted in that file's header comment.
+
+### 11.2 Run with a live terminal feed (Windows PowerShell)
+
+```powershell
+cd "D:\MY works\DBMS Project\digital-library-book-reservation"
+.\.venv\Scripts\python.exe backend\app.py
+```
+
+Open http://localhost:5000. The terminal shows each HTTP request plus colour-coded activity lines (`LOGIN`, `DENIED`, `CHECKOUT`, `RETURN`, `RESERVE`, `ADMIN` …) tagged with the acting user, and every SQL statement the backend runs (`[SQL]`, with bound values, time and row count; `SQL_LOG=0` in `.env` turns it off). Python edits reload the server automatically; frontend edits appear on the next browser refresh (caching is disabled).
+
+### 11.3 SQL file feed (run the `.sql` files with live output)
+
+`database/sql_feed.py` runs `.sql` files statement by statement and prints each statement with its `--` heading, a result table, timing, `NOTICE` messages and errors. Open a second terminal next to the server:
+
+```powershell
+.\.venv\Scripts\python.exe database\sql_feed.py queries.sql                 # all 22 queries
+.\.venv\Scripts\python.exe database\sql_feed.py queries.sql --step          # press Enter between statements
+.\.venv\Scripts\python.exe database\sql_feed.py queries.sql --only "Query 19"
+.\.venv\Scripts\python.exe database\sql_feed.py views.sql functions.sql --rows 15
+.\.venv\Scripts\python.exe database\sql_feed.py --rebuild                   # recreate everything (asks first)
+```
+
+`schema.sql`, `seed.sql` and `seed_extended.sql` reset the data, so the tool asks for confirmation before running them.
+
 ## 12. DBMS Module Mapping
 
 | Module | Evidence in this project |
