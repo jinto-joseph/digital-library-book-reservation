@@ -316,6 +316,7 @@ Every API route except `/api/auth/*` and `/api/health` needs a signed-in session
 | Process returns, issue READY reservations | ❌ 403 | ✅ | ✅ |
 | Recommendations | ✅ | — | — |
 | Manage users (role, activate/deactivate) | ❌ 403 | ❌ 403 | ✅ |
+| Publish new books with copies, add copies (Add Book tab) | ❌ 403 | ❌ 403 | ✅ |
 
 Self-registration always creates a STUDENT. Demo accounts are the users in `database/seed.sql`; they all share the password noted in that file's header comment.
 

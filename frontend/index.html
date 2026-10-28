@@ -43,7 +43,6 @@
         <div class="brand-icon">📚</div>
         <div>
           <div class="brand-title">DIGITAL LIBRARY SYSTEM</div>
-          <span class="brand-badge">DBMS Modules 1–6</span>
         </div>
       </a>
 
@@ -61,6 +60,9 @@
         </button>
         <button class="nav-tab-btn" data-target="tab-queues">
           <span>⏳</span> <span class="tab-label" data-student="My Reservations" data-staff="Reservations Queue">Reservations Queue</span>
+        </button>
+        <button class="nav-tab-btn" data-target="tab-add-book" data-roles="ADMIN">
+          <span>➕</span> Add Book
         </button>
         <button class="nav-tab-btn" data-target="tab-users" data-roles="ADMIN">
           <span>👥</span> Users
@@ -97,7 +99,7 @@
           </div>
           
           <select id="category-filter" class="filter-select" title="Filter by Subject Domain">
-            <option value="">All Categories & Genres (69 Books)</option>
+            <option value="" id="all-categories-option">All Categories & Genres</option>
             <option value="7">Fiction & Thriller</option>
             <option value="8">Biography & Memoir</option>
             <option value="9">History & Politics</option>
@@ -227,7 +229,79 @@
       </div>
     </section>
 
-    <!-- 5. USERS TAB VIEW (ADMIN only) -->
+    <!-- 5. ADD BOOK TAB VIEW (ADMIN only) -->
+    <section id="tab-add-book" class="tab-view">
+      <div class="admin-grid">
+        <div class="glass-panel" style="padding: 1.5rem;">
+          <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.4rem;">Publish a New Book</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.2rem;">
+            Saved in one transaction: the book, its authors and its barcoded copies. It appears in the student catalogue immediately.
+          </p>
+          <form id="add-book-form" class="form-grid" autocomplete="off">
+            <label class="form-field form-wide">Title *
+              <input type="text" id="nb-title" class="search-input auth-input" required maxlength="255">
+            </label>
+            <label class="form-field">ISBN *
+              <input type="text" id="nb-isbn" class="search-input auth-input" required maxlength="20" placeholder="978-...">
+            </label>
+            <label class="form-field">Publication year
+              <input type="number" id="nb-year" class="search-input auth-input" min="1400" max="2100">
+            </label>
+            <label class="form-field">Category *
+              <select id="nb-category" class="filter-select" required></select>
+            </label>
+            <label class="form-field">Publisher
+              <input type="text" id="nb-publisher" class="search-input auth-input" list="publisher-options" placeholder="Pick or type a new one">
+            </label>
+            <label class="form-field form-wide">Author(s) * <span class="form-hint">separate several with commas</span>
+              <input type="text" id="nb-authors" class="search-input auth-input" list="author-options" required>
+            </label>
+            <label class="form-field">Number of copies *
+              <input type="number" id="nb-copies" class="search-input auth-input" min="1" max="20" value="2" required>
+            </label>
+            <label class="form-field">Shelf location
+              <input type="text" id="nb-shelf" class="search-input auth-input" placeholder="e.g. Aisle 3, Shelf 2">
+            </label>
+            <label class="form-field form-wide">Description
+              <textarea id="nb-description" class="search-input auth-input" rows="3"></textarea>
+            </label>
+            <button type="submit" class="btn btn-primary form-wide" style="justify-content: center;">📚 Publish Book</button>
+          </form>
+          <datalist id="publisher-options"></datalist>
+          <datalist id="author-options"></datalist>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+          <div class="glass-panel" style="padding: 1.5rem;">
+            <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">Add Copies to an Existing Book</h2>
+            <form id="add-copies-form" class="form-grid" autocomplete="off">
+              <label class="form-field form-wide">Book
+                <select id="ac-book" class="filter-select" required></select>
+              </label>
+              <label class="form-field">Copies
+                <input type="number" id="ac-copies" class="search-input auth-input" min="1" max="20" value="1" required>
+              </label>
+              <label class="form-field">Shelf location
+                <input type="text" id="ac-shelf" class="search-input auth-input" placeholder="optional">
+              </label>
+              <button type="submit" class="btn btn-outline form-wide" style="justify-content: center;">➕ Add Copies</button>
+            </form>
+          </div>
+
+          <div class="glass-panel" style="padding: 1.5rem;">
+            <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">Recently Added</h2>
+            <div class="data-table-wrapper">
+              <table class="data-table">
+                <thead><tr><th>ID</th><th>Title</th><th>Authors</th><th>Copies</th></tr></thead>
+                <tbody id="recent-books-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. USERS TAB VIEW (ADMIN only) -->
     <section id="tab-users" class="tab-view">
       <div class="glass-panel" style="padding: 1.5rem;">
         <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1.2rem;">

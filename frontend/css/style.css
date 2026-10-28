@@ -718,3 +718,13 @@ body:not(.logged-out) .auth-screen { display: none; }
   font-size: 0.82rem;
 }
 .inline-select option { background: var(--bg-secondary); }
+
+/* Admin: Add Book forms */
+.admin-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 1.5rem; align-items: start; }
+@media (max-width: 1000px) { .admin-grid { grid-template-columns: 1fr; } }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem 1rem; }
+.form-field { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); }
+.form-field .search-input, .form-field .filter-select { width: 100%; font-weight: 400; color: var(--text-main); }
+.form-field textarea { resize: vertical; font-family: inherit; }
+.form-wide { grid-column: 1 / -1; }
+.form-hint { font-weight: 400; color: var(--text-sub); }

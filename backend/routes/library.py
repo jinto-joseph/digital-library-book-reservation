@@ -296,3 +296,119 @@ def admin_update_user(user_id):
     execute_command(f"UPDATE users SET {', '.join(sets)} WHERE user_id = %s", tuple(params + [user_id]))
     log_event("ADMIN", f"user {user_id} updated: {data}")
     return jsonify({"ok": True}), 200
+
+
+# ----------------------------------------------------------------------------
+# Catalogue management (ADMIN only): publish new titles with their copies
+# ----------------------------------------------------------------------------
+MAX_COPIES_PER_REQUEST = 20
+
+
+@library_bp.route("/admin/catalog-options", methods=["GET"])
+@roles_required("ADMIN")
+def catalog_options():
+    """Dropdown data for the Add Book form."""
+    categories = execute_query("SELECT category_id, category_name FROM categories ORDER BY category_name")
+    publishers = execute_query("SELECT publisher_name FROM publishers ORDER BY publisher_name")
+    authors = execute_query("SELECT DISTINCT author_name FROM authors ORDER BY author_name")
+    recent = execute_query(f"SELECT * FROM ({CATALOG_SQL}) cat ORDER BY book_id DESC LIMIT 8")
+    return jsonify({"categories": categories,
+                    "publishers": [p["publisher_name"] for p in publishers],
+                    "authors": [a["author_name"] for a in authors],
+                    "recent": recent}), 200
+
+
+def _insert_copies(cur, book_id, count, shelf):
+    """Adds `count` AVAILABLE copies with sequential barcodes BC-<book>-<nn>."""
+    cur.execute("SELECT COUNT(*) AS n FROM book_copies WHERE book_id = %s", (book_id,))
+    start = cur.fetchone()["n"] + 1
+    barcodes = [f"BC-{book_id:04d}-{seq:02d}" for seq in range(start, start + count)]
+    for code in barcodes:
+        cur.execute("""INSERT INTO book_copies (book_id, barcode, shelf_location, status)
+                       VALUES (%s, %s, %s, 'AVAILABLE')""", (book_id, code, shelf))
+    return barcodes
+
+
+@library_bp.route("/admin/books", methods=["POST"])
+@roles_required("ADMIN")
+def admin_add_book():
+    """Publishes a new title in ONE transaction: publisher and authors (reused by
+    name or created), the book, its author links and N barcoded copies. Any
+    failure (duplicate ISBN, bad year...) rolls the whole book back."""
+    d = request.get_json(silent=True) or {}
+    title = (d.get("title") or "").strip()
+    isbn = (d.get("isbn") or "").strip()
+    authors = [a.strip() for a in (d.get("authors") or "").split(",") if a.strip()]
+    publisher = (d.get("publisher") or "").strip()
+    shelf = (d.get("shelf_location") or "").strip() or "New Arrivals"
+    description = (d.get("description") or "").strip() or None
+    try:
+        copies = int(d.get("copies") or 0)
+        year = int(d["publication_year"]) if d.get("publication_year") else None
+        category_id = int(d.get("category_id") or 0)
+    except (TypeError, ValueError):
+        return jsonify({"error": "Year, category and number of copies must be numbers."}), 400
+    if not title or not isbn or not authors or not category_id:
+        return jsonify({"error": "Title, ISBN, category and at least one author are required."}), 400
+    if not 1 <= copies <= MAX_COPIES_PER_REQUEST:
+        return jsonify({"error": f"Number of copies must be between 1 and {MAX_COPIES_PER_REQUEST}."}), 400
+
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                publisher_id = None
+                if publisher:
+                    cur.execute("""INSERT INTO publishers (publisher_name) VALUES (%s)
+                                   ON CONFLICT (publisher_name) DO UPDATE SET publisher_name = EXCLUDED.publisher_name
+                                   RETURNING publisher_id""", (publisher,))
+                    publisher_id = cur.fetchone()["publisher_id"]
+                cur.execute("""INSERT INTO books (title, isbn, publication_year, publisher_id, category_id, description)
+                               VALUES (%s, %s, %s, %s, %s, %s) RETURNING book_id""",
+                            (title, isbn, year, publisher_id, category_id, description))
+                book_id = cur.fetchone()["book_id"]
+                for order, name in enumerate(dict.fromkeys(authors), 1):
+                    cur.execute("SELECT author_id FROM authors WHERE LOWER(author_name) = LOWER(%s) ORDER BY author_id LIMIT 1", (name,))
+                    row = cur.fetchone()
+                    if row:
+                        author_id = row["author_id"]
+                    else:
+                        cur.execute("INSERT INTO authors (author_name) VALUES (%s) RETURNING author_id", (name,))
+                        author_id = cur.fetchone()["author_id"]
+                    cur.execute("INSERT INTO book_authors (book_id, author_id, author_order) VALUES (%s, %s, %s)",
+                                (book_id, author_id, order))
+                barcodes = _insert_copies(cur, book_id, copies, shelf)
+    except Exception as e:
+        msg = db_error_message(e)
+        if "books_isbn_key" in msg:
+            msg = f"A book with ISBN {isbn} already exists."
+        elif "publication_year" in msg:
+            msg = "Publication year must be between 1400 and 2100."
+        elif "category_id" in msg:
+            msg = "Unknown category."
+        log_event("FAILED", f"add book '{title}': {msg}")
+        return jsonify({"error": msg}), 409
+    log_event("ADMIN", f"published book {book_id} '{title}' with {copies} copies")
+    return jsonify({"ok": True, "book_id": book_id, "barcodes": barcodes}), 201
+
+
+@library_bp.route("/admin/books/<int:book_id>/copies", methods=["POST"])
+@roles_required("ADMIN")
+def admin_add_copies(book_id):
+    """Adds more physical copies to an existing title."""
+    d = request.get_json(silent=True) or {}
+    try:
+        count = int(d.get("copies") or 0)
+    except (TypeError, ValueError):
+        count = 0
+    if not 1 <= count <= MAX_COPIES_PER_REQUEST:
+        return jsonify({"error": f"Number of copies must be between 1 and {MAX_COPIES_PER_REQUEST}."}), 400
+    shelf = (d.get("shelf_location") or "").strip() or "New Arrivals"
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT title FROM books WHERE book_id = %s", (book_id,))
+            book = cur.fetchone()
+            if not book:
+                return jsonify({"error": "Book not found."}), 404
+            barcodes = _insert_copies(cur, book_id, count, shelf)
+    log_event("ADMIN", f"added {count} copies to book {book_id} '{book['title']}'")
+    return jsonify({"ok": True, "barcodes": barcodes}), 201

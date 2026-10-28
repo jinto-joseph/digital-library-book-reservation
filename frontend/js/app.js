@@ -12,6 +12,7 @@ let state = {
   reservations: [],
   recommendations: [],
   users: [],
+  catalogOptions: { categories: [], publishers: [], authors: [], recent: [] },
   stats: {}
 };
 
@@ -27,6 +28,7 @@ async function initApp() {
   setupNavigation();
   setupAuthForms();
   setupSearch();
+  setupAdminBookForms();
   try {
     const data = await api("/api/auth/me", { silent401: true });
     onSignedIn(data.user);
@@ -190,7 +192,10 @@ async function loadData() {
     api("/api/stats").then(d => { state.stats = d; })
   ];
   if (!isStaff()) jobs.push(api("/api/recommendations").then(d => { state.recommendations = d.recommendations; }));
-  if (role === "ADMIN") jobs.push(api("/api/admin/users").then(d => { state.users = d.users; }));
+  if (role === "ADMIN") {
+    jobs.push(api("/api/admin/users").then(d => { state.users = d.users; }));
+    jobs.push(api("/api/admin/catalog-options").then(d => { state.catalogOptions = d; }));
+  }
 
   const results = await Promise.allSettled(jobs);
   const failed = results.find(r => r.status === "rejected");
@@ -202,11 +207,13 @@ async function loadData() {
   renderLoans();
   renderReservations();
   renderUsers();
+  renderAddBook();
 }
 
 // Render Catalog Grid
 function renderBooks() {
   const grid = document.getElementById("books-grid");
+  document.getElementById("all-categories-option").innerText = `All Categories & Genres (${state.books.length} Books)`;
   const query = document.getElementById("search-input").value.toLowerCase();
   const cat = document.getElementById("category-filter").value;
 
@@ -393,6 +400,70 @@ function renderUsers() {
         </td>
       </tr>`;
   }).join("");
+}
+
+// Render the Add Book tab (ADMIN only): dropdowns, datalists and recent titles
+function renderAddBook() {
+  if (!state.currentUser || state.currentUser.role !== "ADMIN") return;
+  const opts = state.catalogOptions;
+  const category = document.getElementById("nb-category");
+  const chosen = category.value;
+  category.innerHTML = `<option value="">Select a category</option>` +
+    opts.categories.map(c => `<option value="${c.category_id}">${escapeHtml(c.category_name)}</option>`).join("");
+  category.value = chosen;
+  document.getElementById("publisher-options").innerHTML = opts.publishers.map(p => `<option value="${escapeHtml(p)}">`).join("");
+  document.getElementById("author-options").innerHTML = opts.authors.map(a => `<option value="${escapeHtml(a)}">`).join("");
+
+  const bookSelect = document.getElementById("ac-book");
+  const picked = bookSelect.value;
+  bookSelect.innerHTML = [...state.books].sort((a, b) => a.title.localeCompare(b.title))
+    .map(b => `<option value="${b.book_id}">${escapeHtml(b.title)} (${b.total_copies} copies)</option>`).join("");
+  if (picked) bookSelect.value = picked;
+
+  document.getElementById("recent-books-body").innerHTML = opts.recent.map(b => `
+    <tr>
+      <td>${b.book_id}</td>
+      <td><strong>${escapeHtml(b.title)}</strong></td>
+      <td>${escapeHtml(b.authors)}</td>
+      <td>${b.available_copies} / ${b.total_copies}</td>
+    </tr>`).join("");
+}
+
+function setupAdminBookForms() {
+  document.getElementById("add-book-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const value = id => document.getElementById(id).value;
+    try {
+      const res = await api("/api/admin/books", {
+        method: "POST",
+        body: {
+          title: value("nb-title"), isbn: value("nb-isbn"), publication_year: value("nb-year"),
+          category_id: value("nb-category"), publisher: value("nb-publisher"), authors: value("nb-authors"),
+          copies: value("nb-copies"), shelf_location: value("nb-shelf"), description: value("nb-description")
+        }
+      });
+      showToast(`Published "${value("nb-title")}" with ${res.barcodes.length} copies (${res.barcodes[0]} …).`, "success");
+      e.target.reset();
+      loadData();
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  });
+
+  document.getElementById("add-copies-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const bookId = document.getElementById("ac-book").value;
+    try {
+      const res = await api(`/api/admin/books/${bookId}/copies`, {
+        method: "POST",
+        body: { copies: document.getElementById("ac-copies").value, shelf_location: document.getElementById("ac-shelf").value }
+      });
+      showToast(`Added ${res.barcodes.length} copies: ${res.barcodes.join(", ")}`, "success");
+      loadData();
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  });
 }
 
 // Render Management Stats
